@@ -1,6 +1,7 @@
 use std::f64;
+use crate::types::{Grid, GRID_SIZE};
 
-pub fn print_sudoku(original_sudoku: &Vec<String>, sudoku: &Vec<String>) {
+pub fn print_sudoku(original_sudoku: & Grid, sudoku: & Grid) {
     // Replace zero for space, add a vertical line every 3 characters
     // Add a horizontal line every 3 lines
     // If the character in the solution is also in the original sudoku, print it in bold green
@@ -9,13 +10,13 @@ pub fn print_sudoku(original_sudoku: &Vec<String>, sudoku: &Vec<String>) {
             println!("---------------------");
         }
         print!(" ");
-        for (j, c) in line.chars().enumerate() {
+        for (j, c) in line.iter().enumerate() {
             if j > 0 && j % 3 == 0 {
                 print!("|");
             }
-            if c == '0' {
+            if *c == 0 {
                 print!("  ");
-            } else if original_sudoku[i].chars().collect::<Vec<char>>()[j] == c {
+            } else if original_sudoku[i][j] == *c {
                 print!("\x1b[1;32m{}\x1b[0m ", c);
             } else {
                 print!("{} ", c);
@@ -28,9 +29,14 @@ pub fn print_sudoku(original_sudoku: &Vec<String>, sudoku: &Vec<String>) {
     println!();
 }
 
-pub fn parse_input(input: &str) -> Vec<String> {
-    // Read as strings
-    input.lines().map(|s| s.to_string()).collect()
+pub fn parse_input(input: &str) -> Grid {
+    let mut sudoku = [[0u8; GRID_SIZE]; GRID_SIZE];
+    for (i, line) in input.lines().enumerate() {
+        for (j, c) in line.chars().enumerate() {
+            sudoku[i][j] = c.to_digit(10).unwrap() as u8;
+        }
+    }
+    sudoku
 }
 
 pub fn standard_deviation(data: &[u128]) -> f64 {
