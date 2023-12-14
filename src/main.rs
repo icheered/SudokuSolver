@@ -11,7 +11,7 @@ mod reduced_options;
 fn main() -> Result<(), Report> {
     color_eyre::install()?;
 
-    let records = utility::read_csv("input.csv", 10000)?;
+    let records = utility::read_csv("input.csv", 0)?;
     let repeat_times = records.len();
 
     // Set up the progress bar
