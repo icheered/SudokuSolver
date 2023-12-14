@@ -9,7 +9,7 @@ pub fn backtrack(sudoku: &mut Grid, row_sets: &mut [BitSet], col_sets: &mut [Bit
 
     // Find the cell with the fewest options
     'outer: for i in 0..GRID_SIZE {
-        'inner: for j in 0..GRID_SIZE {
+        for j in 0..GRID_SIZE {
             if sudoku[i][j] == 0 {
                 let unavailable = get_unavailable(row_sets, col_sets, square_sets, i, j);
                 let options_count = GRID_SIZE - (unavailable.count_ones() as usize);

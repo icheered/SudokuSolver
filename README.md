@@ -1,8 +1,8 @@
 # Rust Sudoku Solver
 Just trying a few different algorithms to try and solve it as fast as possible.
+For testing I'm using [3 million sudoku puzzles](https://www.kaggle.com/datasets/radcliffe/3-million-sudoku-puzzles-with-ratings/data) from Kaggle. These are all solved within 2 minutes with an average duration of 37 ± 65.86 ms.
 
 ## Usage
-The `time` argument is optional and will run the solver 10 times and print the average time and standard deviation it took to solve the puzzle.
 ```bash
-cargo run --quiet --release time
+cargo run --quiet --release
 ```

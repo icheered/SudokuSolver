@@ -1,6 +1,5 @@
 use indicatif::{ProgressBar, ProgressStyle};
-use color_eyre::Report;
-use std::fs;
+use color_eyre::{eyre::Report, eyre::Result};
 use std::time::Instant;
 
 mod types;
@@ -12,19 +11,8 @@ mod reduced_options;
 fn main() -> Result<(), Report> {
     color_eyre::install()?;
 
-    // Check if the flag --time is present
-    let args: Vec<String> = std::env::args().collect();
-    let time = args.len() > 1 && args[1] == "time";
-
-    // Read the content of the file
-    let input = fs::read_to_string("src/input.txt")?;
-    let sudoku = utility::parse_input(&input);
-    utility::print_sudoku(&sudoku, &sudoku);
-
-    let repeat_times = if time { 1000 } else { 1 };
-    let mut times = vec![0; repeat_times];
-    
-    let result = solver::solve(&sudoku);
+    let records = utility::read_csv("input.csv", 10000)?;
+    let repeat_times = records.len();
 
     // Set up the progress bar
     let progress_bar = ProgressBar::new(repeat_times as u64);
@@ -32,12 +20,35 @@ fn main() -> Result<(), Report> {
         .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}")?
         .progress_chars("#>-"));
 
-    for i in 0..repeat_times {
-        let start = Instant::now();
-        let _ = solver::solve(&sudoku);
-        let duration = start.elapsed();
-        times[i] = duration.as_micros();
+    let mut times = Vec::with_capacity(repeat_times);
 
+    // Format repeat_times so that it is human readable (space every 3 digits)
+    let repeat_times_hr = repeat_times.to_string().chars().rev().collect::<Vec<char>>().chunks(3).map(|chunk| chunk.iter().collect::<String>()).collect::<Vec<String>>().join(" ").chars().rev().collect::<String>();
+    println!("Solving {} sudokus...", repeat_times_hr);
+    // Loop through all the puzzles
+    for record in records {
+        let start = Instant::now();
+        let result_option = solver::solve(&record.puzzle); // Assuming `solve` function returns an Option
+        let duration = start.elapsed();
+    
+        let solve_time = duration.as_micros();
+        times.push(solve_time);
+        
+        match result_option {
+            Some(result) => {
+                let correct = result == record.solution;
+                if !correct {
+                    println!("Incorrect solution");
+                } else {
+                    //utility::print_sudoku(&record.puzzle, &result, correct, solve_time);
+                }
+                
+            },
+            None => {
+                println!("Failed to solve puzzle");
+            }
+        }
+    
         // Update the progress bar
         progress_bar.inc(1);
     }
@@ -45,15 +56,13 @@ fn main() -> Result<(), Report> {
     // Finish the progress bar
     progress_bar.finish_with_message("Completed");
 
-    if let Some(solved_sudoku) = result {
-        utility::print_sudoku(&sudoku, &solved_sudoku);
-    } else {
-        println!("No solution found for the given Sudoku.");
-    }
+    // Print total time
+    println!("Total time taken to solve all the sudokus: {} ms", times.iter().sum::<u128>() as f64 / 1000.0);
 
-    // Print the solution
-    let std = utility::standard_deviation(&times);
-    println!("Average time taken to solve the sudoku: {} ± {:.2} us", times.iter().sum::<u128>() / repeat_times as u128, std);
+    // Calculate and print statistics
+    let avg_time = times.iter().sum::<u128>() / repeat_times as u128;
+    let std_dev = utility::standard_deviation(&times); // Assuming utility::standard_deviation exists
+    println!("Average time taken to solve the sudoku: {} ± {:.2} ms", avg_time, std_dev);
 
     Ok(())
 }
